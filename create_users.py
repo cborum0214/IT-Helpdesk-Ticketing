@@ -8,14 +8,13 @@ app.app_context().push()
 db.create_all()
 
 # Create users
-admin = User(username='tech1', role='technician')
-admin.set_password('pass123')
+tech = User(username='tech1', role='technician')
+tech.set_password('pass123')
 
 user = User(username='user1', role='user')
 user.set_password('pass123')
 
-db.session.add(admin)
-db.session.add(user)
+db.session.add_all([tech, user])
 db.session.commit()
 
-print("Users created!")
+print("Sample users created!")

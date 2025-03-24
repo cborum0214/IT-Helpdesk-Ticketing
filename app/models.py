@@ -1,14 +1,19 @@
-from datetime import datetime
+from app import db
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
-from app import db, login_manager
+from datetime import datetime
+from app import login_manager
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), unique=True, nullable=False)
     password_hash = db.Column(db.String(128), nullable=False)
     role = db.Column(db.String(20), nullable=False)  # 'user' or 'technician'
-    tickets = db.relationship('Ticket', backref='creator', lazy='dynamic')
+
+    # Specify foreign_keys here to avoid ambiguity
+    submitted_tickets = db.relationship('Ticket', foreign_keys='Ticket.user_id', backref='creator', lazy='dynamic')
+    assigned_tickets = db.relationship('Ticket', foreign_keys='Ticket.technician_id', backref='technician', lazy='dynamic')
+
     comments = db.relationship('Comment', backref='author', lazy='dynamic')
 
     def set_password(self, password):
@@ -30,8 +35,8 @@ class Ticket(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    technician_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))             # ticket creator
+    technician_id = db.Column(db.Integer, db.ForeignKey('user.id'))       # assigned tech
 
     comments = db.relationship('Comment', backref='ticket', lazy='dynamic')
 
