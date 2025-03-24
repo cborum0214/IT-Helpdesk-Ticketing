@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>All Tickets</h2>
+
+<ul class="list-group">
+  {% for ticket in tickets %}
+    <li class="list-group-item">
+      <a href="{{ url_for('routes.view_ticket', ticket_id=ticket.id) }}">{{ ticket.title }}</a>
+      <span class="badge bg-{{ 'success' if ticket.status == 'Resolved' else 'warning' }} float-end">
+        {{ ticket.status }}
+      </span>
+    </li>
+  {% endfor %}
+</ul>
+{% endblock %}

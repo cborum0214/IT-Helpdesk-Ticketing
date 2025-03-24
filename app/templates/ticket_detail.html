@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>{{ ticket.title }}</h2>
+<p><strong>Status:</strong> {{ ticket.status }}</p>
+<p><strong>Description:</strong> {{ ticket.description }}</p>
+<p><strong>Created by:</strong> {{ ticket.creator.username }}</p>
+<p><strong>Assigned to:</strong> {{ ticket.technician.username if ticket.technician else "Unassigned" }}</p>
+
+{% if current_user.role == 'technician' %}
+<form method="POST" action="{{ url_for('routes.update_ticket', ticket_id=ticket.id) }}">
+    <div class="mb-3">
+        <label for="status">Update Status</label>
+        <select class="form-select" name="status">
+            <option value="Open" {% if ticket.status == "Open" %}selected{% endif %}>Open</option>
+            <option value="In Progress" {% if ticket.status == "In Progress" %}selected{% endif %}>In Progress</option>
+            <option value="Resolved" {% if ticket.status == "Resolved" %}selected{% endif %}>Resolved</option>
+        </select>
+    </div>
+    <button class="btn btn-warning" type="submit">Update</button>
+</form>
+{% endif %}
+
+<hr>
+<h4>Comments</h4>
+<ul class="list-group mb-3">
+    {% for comment in comments %}
+    <li class="list-group-item">
+        <strong>{{ comment.author.username }}:</strong> {{ comment.comment_text }}
+        <br><small class="text-muted">{{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+    </li>
+    {% endfor %}
+</ul>
+
+<form method="POST" action="{{ url_for('routes.add_comment', ticket_id=ticket.id) }}">
+    <div class="mb-3">
+        <label for="comment">Add Comment</label>
+        <textarea name="comment" class="form-control" required></textarea>
+    </div>
+    <button type="submit" class="btn btn-secondary">Add Comment</button>
+</form>
+{% endblock %}
