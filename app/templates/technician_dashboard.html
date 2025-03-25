@@ -3,14 +3,62 @@
 {% block content %}
 <h2>All Tickets</h2>
 
+<!-- Filter Form -->
+<form method="get" class="row g-3 mb-4">
+    <div class="col-md-3">
+        <label class="form-label">Status</label>
+        <select name="status" class="form-select">
+            <option value="">All</option>
+            <option value="Open" {% if request.args.get('status') == 'Open' %}selected{% endif %}>Open</option>
+            <option value="In Progress" {% if request.args.get('status') == 'In Progress' %}selected{% endif %}>In Progress</option>
+            <option value="Resolved" {% if request.args.get('status') == 'Resolved' %}selected{% endif %}>Resolved</option>
+        </select>
+    </div>
+
+    <div class="col-md-3">
+        <label class="form-label">Assigned Technician</label>
+        <select name="assigned_to" class="form-select">
+            <option value="">All</option>
+            <option value="unassigned" {% if request.args.get('assigned_to') == 'unassigned' %}selected{% endif %}>Unassigned</option>
+            {% for tech in technicians %}
+                <option value="{{ tech.id }}" {% if request.args.get('assigned_to') == tech.id|string %}selected{% endif %}>
+                    {{ tech.username }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="col-md-3">
+        <label class="form-label">Sort by Last Updated</label>
+        <select name="sort" class="form-select">
+            <option value="desc" {% if request.args.get('sort') == 'desc' %}selected{% endif %}>Newest First</option>
+            <option value="asc" {% if request.args.get('sort') == 'asc' %}selected{% endif %}>Oldest First</option>
+        </select>
+    </div>
+
+    <div class="col-md-3 d-flex align-items-end">
+        <button type="submit" class="btn btn-primary w-100">Apply Filters</button>
+    </div>
+</form>
+
+<!-- Ticket List -->
 <ul class="list-group">
-  {% for ticket in tickets %}
+    {% for ticket in tickets %}
     <li class="list-group-item">
-      <a href="{{ url_for('routes.view_ticket', ticket_id=ticket.id) }}">{{ ticket.title }}</a>
-      <span class="badge bg-{{ 'success' if ticket.status == 'Resolved' else 'warning' }} float-end">
-        {{ ticket.status }}
-      </span>
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <a href="{{ url_for('routes.view_ticket', ticket_id=ticket.id) }}" class="fw-bold">
+                    {{ ticket.title }}
+                </a><br>
+                <small class="text-muted">Opened: {{ ticket.created_at.strftime('%Y-%m-%d %H:%M') }}</small><br>
+                <small class="text-muted">Last updated: {{ ticket.updated_at.strftime('%Y-%m-%d %H:%M') }}</small>
+            </div>
+            <span class="badge bg-secondary">{{ ticket.status }}</span>
+        </div>
     </li>
-  {% endfor %}
+    {% else %}
+    <li class="list-group-item text-muted">No tickets found with the selected filters.</li>
+    {% endfor %}
 </ul>
+
 {% endblock %}

@@ -11,9 +11,33 @@ bp = Blueprint('routes', __name__)
 @login_required
 def dashboard():
     if current_user.role == 'technician':
-        tickets = Ticket.query.order_by(Ticket.created_at.desc()).all()
-        return render_template('technician_dashboard.html', tickets=tickets)
+        status = request.args.get('status')
+        assigned_to = request.args.get('assigned_to')
+        sort = request.args.get('sort', 'desc')
+
+        query = Ticket.query
+
+        if status:
+            query = query.filter_by(status=status)
+
+        if assigned_to:
+            if assigned_to == 'unassigned':
+                query = query.filter_by(technician_id=None)
+            else:
+                query = query.filter_by(technician_id=int(assigned_to))
+
+        if sort == 'asc':
+            query = query.order_by(Ticket.updated_at.asc())
+        else:
+            query = query.order_by(Ticket.updated_at.desc())
+
+        tickets = query.all()
+        technicians = User.query.filter_by(role='technician').all()
+
+        return render_template('technician_dashboard.html', tickets=tickets, technicians=technicians)
+
     else:
+        # User dashboard
         tickets = Ticket.query.filter_by(user_id=current_user.id).order_by(Ticket.created_at.desc()).all()
         return render_template('user_dashboard.html', tickets=tickets)
 
@@ -45,13 +69,16 @@ def create_ticket():
 def view_ticket(ticket_id):
     ticket = Ticket.query.get_or_404(ticket_id)
 
-    # Access control
     if current_user.role == 'user' and ticket.user_id != current_user.id:
         flash("You don't have permission to view this ticket.")
         return redirect(url_for('routes.dashboard'))
 
     comments = ticket.comments.order_by(Comment.created_at).all()
-    return render_template('ticket_detail.html', ticket=ticket, comments=comments)
+
+    # Get all technicians for the assign dropdown
+    technicians = User.query.filter_by(role='technician').all()
+
+    return render_template('ticket_detail.html', ticket=ticket, comments=comments, technicians=technicians)
 
 # Update ticket status (technicians only)
 @bp.route('/ticket/<int:ticket_id>/update', methods=['POST'])
@@ -60,16 +87,21 @@ def update_ticket(ticket_id):
     ticket = Ticket.query.get_or_404(ticket_id)
 
     if current_user.role != 'technician':
-        flash("Only technicians can update ticket status.")
+        flash("Only technicians can update tickets.")
         return redirect(url_for('routes.dashboard'))
 
+    # Get status from form
     new_status = request.form.get("status")
+    new_tech_id = request.form.get("technician_id")
+
     if new_status:
         ticket.status = new_status
-        ticket.technician_id = current_user.id  # auto-assign to self
-        db.session.commit()
-        flash("Ticket updated.")
-    
+
+    if new_tech_id:
+        ticket.technician_id = int(new_tech_id)
+
+    db.session.commit()
+    flash("Ticket updated.")
     return redirect(url_for('routes.view_ticket', ticket_id=ticket.id))
 
 # Add comment

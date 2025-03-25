@@ -8,11 +8,11 @@ app.app_context().push()
 db.create_all()
 
 # Create users
-tech = User(username='tech1', role='technician')
-tech.set_password('pass123')
+tech = User(username='cborum', role='technician')
+tech.set_password('0d8pwDfO')
 
-user = User(username='user1', role='user')
-user.set_password('pass123')
+user = User(username='student', role='user')
+user.set_password('student')
 
 db.session.add_all([tech, user])
 db.session.commit()

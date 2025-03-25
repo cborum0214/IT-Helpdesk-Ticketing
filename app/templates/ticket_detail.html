@@ -8,16 +8,29 @@
 <p><strong>Assigned to:</strong> {{ ticket.technician.username if ticket.technician else "Unassigned" }}</p>
 
 {% if current_user.role == 'technician' %}
-<form method="POST" action="{{ url_for('routes.update_ticket', ticket_id=ticket.id) }}">
+<form method="POST" action="{{ url_for('routes.update_ticket', ticket_id=ticket.id) }}" class="mb-4">
     <div class="mb-3">
-        <label for="status">Update Status</label>
+        <label for="status" class="form-label">Update Status</label>
         <select class="form-select" name="status">
             <option value="Open" {% if ticket.status == "Open" %}selected{% endif %}>Open</option>
             <option value="In Progress" {% if ticket.status == "In Progress" %}selected{% endif %}>In Progress</option>
             <option value="Resolved" {% if ticket.status == "Resolved" %}selected{% endif %}>Resolved</option>
         </select>
     </div>
-    <button class="btn btn-warning" type="submit">Update</button>
+
+    <div class="mb-3">
+        <label for="technician_id" class="form-label">Assign Technician</label>
+        <select class="form-select" name="technician_id">
+            <option value="">Unassigned</option>
+            {% for tech in technicians %}
+                <option value="{{ tech.id }}" {% if ticket.technician and tech.id == ticket.technician.id %}selected{% endif %}>
+                    {{ tech.username }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <button class="btn btn-warning" type="submit">Update Ticket</button>
 </form>
 {% endif %}
 
@@ -39,4 +52,8 @@
     </div>
     <button type="submit" class="btn btn-secondary">Add Comment</button>
 </form>
+
+<!-- ✅ Back to Dashboard button (shown to all users) -->
+<a href="{{ url_for('routes.dashboard') }}" class="btn btn-outline-secondary mt-4">← Back to Dashboard</a>
+
 {% endblock %}
